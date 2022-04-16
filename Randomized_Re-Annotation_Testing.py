@@ -93,8 +93,7 @@ for x in range(0, 10):
     # end of SVM 
 
     # Average Percentage of false_neg and false_pos
-    none_to_hate =  
-    hate_to none = 
+    
     n = int((len(false_neg) + len(false_pos)) / len(df2))
 
     print("Re-Annotating: " + str(x + 1) + " Number of Re-Annotations: " + str(n) + " : " + str(len(df)))
@@ -128,7 +127,7 @@ for x in range(0, 10):
 
 
     print("Length of Re-Annotated DataSet:", str(len(r_df)))
-    break
+    
 
     r_X_train, r_X_test_svm, r_Y_train, r_Y_test_svm = train_test_split(r_df.Tweets, r_df.Class, test_size=0.2)
 
