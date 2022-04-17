@@ -1,9 +1,12 @@
+## Accounting for Annotation Error in AI Dataset Development through Intelligent Re-Annotation
+### [Insert Link to Paper Here]<br/>
+
 Diego Jurado<br/>
 University of Pittsburgh - Dept. of Computer Science<br/>
 CS 1699 / 1951 - Spring 2022<br/>
 Term Research Project<br/>
-Accounting for Annotation Error in AI Dataset Development through Intelligent Re-Annotation<br/>
-[Insert Link to Paper Here]
+
+
 
 Abstract: [Insert Abstract Here]
 
