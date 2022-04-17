@@ -1,5 +1,5 @@
 Diego Jurado
-University of Pittsburgh - Dept. of Computer Science
+\nUniversity of Pittsburgh - Dept. of Computer Science
 CS 1699 / 1951 - Spring 2022
 Term Research Project
 Accounting for Annotation Error in AI Dataset Development through Intelligent Re-Annotation
