@@ -16,3 +16,12 @@ Round 3 - 15 Trials:
 - Avg Random Change:      -8.556%
 - Avg Intelligent Change: +3.700%
 
+# Methods:
+
+## Baseline SVM
+
+## Randomized Re-Annotation
+
+## Intelligent Re-Annotation
+
+
