@@ -1,13 +1,13 @@
-Diego Jurado
-\nUniversity of Pittsburgh - Dept. of Computer Science
-CS 1699 / 1951 - Spring 2022
-Term Research Project
-Accounting for Annotation Error in AI Dataset Development through Intelligent Re-Annotation
+Diego Jurado<br/>
+University of Pittsburgh - Dept. of Computer Science<br/>
+CS 1699 / 1951 - Spring 2022<br/>
+Term Research Project<br/>
+Accounting for Annotation Error in AI Dataset Development through Intelligent Re-Annotation<br/>
 [Insert Link to Paper Here]
 
 Abstract: [Insert Abstract Here]
 
-Experimental Results:
+Experimental Results:<br/>
 Round 1 - 5 Trials:
 - Avg Baseline Change:    +0.000%
 - Avg Random Change:      -8.684%
