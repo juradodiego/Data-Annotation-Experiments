@@ -7,6 +7,7 @@
 # Imports
 import numpy as np
 import pandas as pd
+from sklearn import *
 from sklearn import svm
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
@@ -41,47 +42,82 @@ def data_stat(df):
 def rand_annot_samp(df, fn, fp):
 
     rdf = df.copy()
+
     fn_tweets = df.query('Class == "hate"').sample(frac=fn).Tweets.tolist()
-    fp_tweets = df.query('Class == "none"').sample(frac=fp).Tweets.copy()
+    fp_tweets = df.query('Class == "none"').sample(frac=fp).Tweets.tolist()
 
     for t in fn_tweets:
-        rdf.loc[df["Tweets"] == t, "Class"] = "hate"
-    for t in fp_tweets:
         rdf.loc[df["Tweets"] == t, "Class"] = "none"
+    for t in fp_tweets:
+        rdf.loc[df["Tweets"] == t, "Class"] = "hate"
+
+    print("\nTotal Amount Randomly Re-Annotated:", len(fp_tweets) + len(fn_tweets))
 
     return rdf
 
-''' TO-DO '''
 # Intelligent Re-Annotation Sampling
 # params: Dataframe df, float fn, float fp
 # return: DataFrame idf
-def inte_annot_samp(df):
+def inte_annot_samp(df, tweets, fn, fp):
 
+    W_NORM = np.linalg.norm(clf.coef_)
+    dist = []
     idf = df.copy()
-    fn_tweets = []
-    fp_tweets = []
 
-    for t in fn_tweets:
-        idf.loc[df["Tweets"] == t, "Class"] = "hate"
-    data_stat(rdf)
-    for t in fp_tweets:
-        idf.loc[df["Tweets"] == t, "Class"] = "none"
-    data_stat(rdf)
+    for t in tweets:
+        x = vectorizer.fit_transform([t])
+        x = x.toarray()
+
+        zeros = [[0] for l in range(0,5000 - len(x[0]))]
+        
+        x = np.append(x,zeros)
+        x = np.reshape(x,(1,-1))
+
+        dist.append((clf.decision_function(x) / W_NORM)[0])
+
+    dict = {"Tweets" : tweets, "Distance" : dist}
+
+    new_df = pd.DataFrame.from_dict(dict)
+
+    final = pd.merge(df, new_df)
+
+    final.sort_values(by="Distance", inplace=True)
+
+    p_to_n = 0
+    n_to_p = 0
+    for index, row in final.iterrows():
+        tweet = row["Tweets"]
+        dist = row["Distance"]
+
+        if (row["Class"] == "hate" and p_to_n != int(fn * 3000)):
+            idf.loc[idf["Tweets"] == tweet, "Class"] = "none"
+            p_to_n += 1
+
+        elif (row["Class"] == "none" and n_to_p != int(fp * 3000)):
+            idf.loc[idf["Tweets"] == tweet, "Class"] = "hate"
+            n_to_p += 1
+    
+        if n_to_p == int(fp * 3000) and p_to_n == int(fn * 3000):
+            break
+            
+    print("\nTotal Amount of Re-annotations:", int(fp * 3000) + int(fn * 3000))
 
     return idf
 
 ''' ------ MAIN METHOD ------ '''
 
+results = {}
+
 for trial in range(1,6):
     print("\nTrial:", trial)
-
+    t = []
     # ------ Baseline ------ #
 
     # Data Processing
     df = import_data("dataset.csv")
 
     # Data Set Info
-    data_stat(df)
+    # data_stat(df)
 
     # Data Split
     X_train, X_test, Y_train, Y_test = train_test_split(df.Tweets, df.Class, test_size=0.2)
@@ -90,7 +126,7 @@ for trial in range(1,6):
 
     train_data_features = vectorizer.fit_transform(X_train)
     train_data_features = train_data_features.toarray()
-
+    
     test_data_features = vectorizer.transform(X_test)
     test_data_features = test_data_features.toarray()
 
@@ -106,13 +142,20 @@ for trial in range(1,6):
     accuracy=np.mean(predicted==Y_test)
 
     # TO-DO: Format Accuracy Str
-    print ("\nBaseline Accuracy: ",accuracy) 
+    # print ("\nBaseline Accuracy: ",accuracy) 
+    t.append(accuracy)
 
     t_dict = {"Tweets" : X_test, "Actual" : Y_test, "Predicted" : predicted}
     df2 = pd.DataFrame(t_dict).reset_index()
 
-    fn = len(df2.query('Actual == "hate" and Actual != Predicted')) / len(df2)
-    fp = len(df2.query('Actual == "none" and Actual != Predicted')) / len(df2)
+    fn_tweets = df2.query('Actual == "hate" and Actual != Predicted').Tweets.copy()
+    fp_tweets = df2.query('Actual == "none" and Actual != Predicted').Tweets.copy()
+
+    fn = len(fn_tweets) / len(df2)
+    fp = len(fp_tweets) / len(df2)
+
+    tweets = fn_tweets.append(fp_tweets) 
+    tweets = tweets.tolist()
 
     # ------ Random Sampling ------ #
 
@@ -120,7 +163,7 @@ for trial in range(1,6):
     rdf = rand_annot_samp(df, fn, fp)
 
     # Data Set Info
-    data_stat(rdf)
+    # data_stat(rdf)
 
     # Data Split
     X_train, X_test, Y_train, Y_test = train_test_split(rdf.Tweets, rdf.Class, test_size=0.2)
@@ -141,19 +184,16 @@ for trial in range(1,6):
     r_predicted = r_clf.predict(test_data_features)
 
     r_accuracy=np.mean(r_predicted==Y_test)
-
-    # TO-DO: Format Accuracy Str
-    print ("\nRandom Accuracy: ",r_accuracy) 
+    t.append(r_accuracy)
+   
+    # print ("\nRandom Accuracy: ",r_accuracy) 
    
 
     # ------ Intelligent Sampling ------ #
 
     # Data Processing
-    idf = inte_annot_samp(df, fn, fp)
-
-    # Data Set Info
-    data_stat(idf)
-
+    idf = inte_annot_samp(df, tweets, fn, fp)
+    
     # Data Split
     X_train, X_test, Y_train, Y_test = train_test_split(idf.Tweets, idf.Class, test_size=0.2)
 
@@ -167,13 +207,20 @@ for trial in range(1,6):
     i_clf = svm.SVC(kernel='linear', C=1.0)
 
     print("\nTraining Intelligent Sampling SVM")
-    i_clf.predict(test_data_features)
+    i_clf.fit(train_data_features,Y_train)
 
-    print("\nTesting Intelligent Sampling SVM")
-    i_predicted = clf.predict(test_data_features)
+    print("Testing Intelligent Sampling SVM")
+    i_predicted = i_clf.predict(test_data_features)
 
     i_accuracy = np.mean(i_predicted==Y_test)
-
+    t.append(i_accuracy)
     # TO-DO: Format Accuracy Str
-    print ("\nIntelligent Accuracy: ",i_accuracy)  
+    # print ("\nIntelligent Accuracy: ",i_accuracy)  
     
+    # Appending results
+    s = "Trial-" + str(trial)
+    results[s] = t
+
+print(results)
+results = pd.DataFrame.from_dict(results)
+results.to_csv("results.csv")
