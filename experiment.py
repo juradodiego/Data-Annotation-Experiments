@@ -108,7 +108,9 @@ def inte_annot_samp(df, tweets, fn, fp):
 
 results = {}
 
-for trial in range(1,6):
+trials = 16
+
+for trial in range(1,trials):
     print("\nTrial:", trial)
     t = []
     # ------ Baseline ------ #
@@ -218,9 +220,25 @@ for trial in range(1,6):
     # print ("\nIntelligent Accuracy: ",i_accuracy)  
     
     # Appending results
-    s = "Trial-" + str(trial)
+    s = str(trial)
     results[s] = t
 
-print(results)
+
 results = pd.DataFrame.from_dict(results)
 results.to_csv("results.csv")
+
+b_change = []
+r_change = []
+i_change = []
+for trial in range(1,trials):
+    bl = results.iloc[0][trial]
+    rand = results.iloc[1][trial]
+    inte = results.iloc[2][trial]
+
+    b_change.append((bl-bl) * 100)
+    r_change.append((rand-bl) * 100)
+    i_change.append((inte-bl) * 100)
+
+print("Avg Baseline Change: " + str(sum(b_change) / len(b_change)) + "%")
+print("Avg Random Change: " + str(sum(r_change) / len(r_change)) + "%")
+print("Avg Intelligent Change: " + str(sum(i_change) / len(i_change)) + "%")
