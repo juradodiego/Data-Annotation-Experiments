@@ -1,3 +1,8 @@
+# Diego Jurado
+# University of Pittsburgh - Dept. of Computer Science
+# CS 1699 / 1951 - Spring 2022
+# Term Research Project
+
 
 # Results:
 
