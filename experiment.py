@@ -10,7 +10,9 @@ import pandas as pd
 from sklearn import *
 from sklearn import svm
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
+import warnings; warnings.filterwarnings("ignore")
 
 ''' ------ HELPER METHODS ------ '''
 
@@ -51,12 +53,12 @@ def rand_annot_samp(df, fn, fp):
     for t in fp_tweets:
         rdf.loc[df["Tweets"] == t, "Class"] = "hate"
 
-    print("\nTotal Amount Randomly Re-Annotated:", len(fp_tweets) + len(fn_tweets))
+    print("\nTotal Random Re-Annotations:", len(fp_tweets) + len(fn_tweets))
 
     return rdf
 
 # Intelligent Re-Annotation Sampling
-# params: Dataframe df, float fn, float fp
+# params: Dataframe df, String[] tweets, float fn, float fp
 # return: DataFrame idf
 def inte_annot_samp(df, tweets, fn, fp):
 
@@ -100,7 +102,7 @@ def inte_annot_samp(df, tweets, fn, fp):
         if n_to_p == int(fp * 3000) and p_to_n == int(fn * 3000):
             break
             
-    print("\nTotal Amount of Re-annotations:", int(fp * 3000) + int(fn * 3000))
+    print("\nTotal Intelligent Re-annotations:", int(fp * 3000) + int(fn * 3000))
 
     return idf
 
@@ -111,15 +113,11 @@ results = {}
 trials = 16
 
 for trial in range(1,trials):
-    print("\nTrial:", trial)
-    t = []
+    print("\n------- Trial:", trial, "------")
     # ------ Baseline ------ #
 
     # Data Processing
     df = import_data("dataset.csv")
-
-    # Data Set Info
-    # data_stat(df)
 
     # Data Split
     X_train, X_test, Y_train, Y_test = train_test_split(df.Tweets, df.Class, test_size=0.2)
@@ -138,14 +136,15 @@ for trial in range(1,trials):
     print ("\nTraining Baseline SVM")
     clf.fit(train_data_features,Y_train)
 
-    print ("\nTesting Baseline SVM")
+    print ("Testing Baseline SVM")
     predicted=clf.predict(test_data_features)
 
-    accuracy=np.mean(predicted==Y_test)
+    # Appending Results
+    p, r, f, non = precision_recall_fscore_support(Y_test, predicted, average="weighted")
+    b_key = "Baseline-" + str(trial)
+    results[b_key] = {"Precision" : p, "Recall" : r, "F-Score" : f}
 
-    # TO-DO: Format Accuracy Str
-    # print ("\nBaseline Accuracy: ",accuracy) 
-    t.append(accuracy)
+    # ------ Tweet Processing ------ #
 
     t_dict = {"Tweets" : X_test, "Actual" : Y_test, "Predicted" : predicted}
     df2 = pd.DataFrame(t_dict).reset_index()
@@ -153,6 +152,7 @@ for trial in range(1,trials):
     fn_tweets = df2.query('Actual == "hate" and Actual != Predicted').Tweets.copy()
     fp_tweets = df2.query('Actual == "none" and Actual != Predicted').Tweets.copy()
 
+    # FN and FP ratios
     fn = len(fn_tweets) / len(df2)
     fp = len(fp_tweets) / len(df2)
 
@@ -163,9 +163,6 @@ for trial in range(1,trials):
 
     # Data Processing
     rdf = rand_annot_samp(df, fn, fp)
-
-    # Data Set Info
-    # data_stat(rdf)
 
     # Data Split
     X_train, X_test, Y_train, Y_test = train_test_split(rdf.Tweets, rdf.Class, test_size=0.2)
@@ -182,14 +179,13 @@ for trial in range(1,trials):
     print("\nTraining Random Sampling SVM")
     r_clf.fit(train_data_features,Y_train)
 
-    print("\nTesting Random Sampling SVM")
+    print("Testing Random Sampling SVM")
     r_predicted = r_clf.predict(test_data_features)
 
-    r_accuracy=np.mean(r_predicted==Y_test)
-    t.append(r_accuracy)
-   
-    # print ("\nRandom Accuracy: ",r_accuracy) 
-   
+    # Appending Results
+    p, r, f, non = precision_recall_fscore_support(Y_test, r_predicted, average="weighted")
+    r_key = "Randomized-" + str(trial)
+    results[r_key] = {"Precision" : p, "Recall" : r, "F-Score" : f}
 
     # ------ Intelligent Sampling ------ #
 
@@ -211,34 +207,18 @@ for trial in range(1,trials):
     print("\nTraining Intelligent Sampling SVM")
     i_clf.fit(train_data_features,Y_train)
 
-    print("Testing Intelligent Sampling SVM")
+    print("Testing Intelligent Sampling SVM\n")
     i_predicted = i_clf.predict(test_data_features)
 
-    i_accuracy = np.mean(i_predicted==Y_test)
-    t.append(i_accuracy)
-    # TO-DO: Format Accuracy Str
-    # print ("\nIntelligent Accuracy: ",i_accuracy)  
-    
     # Appending results
-    s = str(trial)
-    results[s] = t
+    p, r, f, non = precision_recall_fscore_support(Y_test, i_predicted, average="weighted")
+    i_key = "Intelligent-" + str(trial)
+    results[i_key] = {"Precision" : p, "Recall" : r, "F-Score" : f}
 
+# ------ End of Trials ------ #
 
+# Pushing results into .csv file
 results = pd.DataFrame.from_dict(results)
 results.to_csv("results.csv")
 
-b_change = []
-r_change = []
-i_change = []
-for trial in range(1,trials):
-    bl = results.iloc[0][trial]
-    rand = results.iloc[1][trial]
-    inte = results.iloc[2][trial]
-
-    b_change.append((bl-bl) * 100)
-    r_change.append((rand-bl) * 100)
-    i_change.append((inte-bl) * 100)
-
-print("Avg Baseline Change: " + str(sum(b_change) / len(b_change)) + "%")
-print("Avg Random Change: " + str(sum(r_change) / len(r_change)) + "%")
-print("Avg Intelligent Change: " + str(sum(i_change) / len(i_change)) + "%")
+# end of Experiment class
