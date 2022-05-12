@@ -1,4 +1,4 @@
-## Accounting for Annotation Error in AI Dataset Development through Intelligent Re-Annotation
+## Eliminating Bias in AI: Compensating for Label Bias in Data Sets through Re-Annotation
 ### [Insert Link to Paper Here]<br/>
 
 Diego Jurado<br/>
