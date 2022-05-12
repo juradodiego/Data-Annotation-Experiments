@@ -1,5 +1,5 @@
 ## Eliminating Bias in AI: Compensating for Label Bias in Data Sets through Re-Annotation
-### See paper [here] (https://github.com/juradodiego/Intelligent-ReAnnotation/blob/main/%22Eliminating%20Bias%20in%20AI%22%20Compensating%20for%20Label%20Bias%20in%20Data%20Sets%20through%20Re-Annotation.pdf) <br/>
+### See paper [here] () <br/>
 
 Diego Jurado<br/>
 University of Pittsburgh - Dept. of Computer Science<br/>
